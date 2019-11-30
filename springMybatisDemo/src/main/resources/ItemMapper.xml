@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="items">
+    <insert id="insert">
+        insert into items(itemname, oid)
+        values (#{itemName}, #{order.id})
+    </insert>
+
+    <update id="update" parameterType="int">
+        update items
+        set itemname = #{itemName},
+            oid=#{order.id}
+        where id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="int">
+        delete
+        from items
+        where id = #{id}
+    </delete>
+    <!-- findById -->
+    <!-- select字段别名与类属性名不一致，需指定resultMap -->
+    <select id="selectOne" parameterType="int" resultMap="RM_item">
+        SELECT i.id       iid,
+               i.itemname iname,
+               o.id       oid,
+               o.orderno  ono,
+               u.id       uid,
+               u.name     uname,
+               u.age      uage
+        FROM items i
+                 LEFT OUTER JOIN orders o
+                                 ON i.oid = o.id
+                 LEFT OUTER JOIN users u
+                                 ON o.uid = u.id
+        WHERE i.id = #{id}
+    </select>
+    <select id="selectAll" resultMap="RM_item">
+        SELECT i.id       iid,
+               i.itemname iname,
+               o.id       oid,
+               o.orderno  ono,
+               u.id       uid,
+               u.name     uname,
+               u.age      uage
+        FROM items i
+                 LEFT OUTER JOIN orders o
+                                 ON i.oid = o.id
+                 LEFT OUTER JOIN users u
+                                 ON o.uid = u.id
+    </select>
+    <!-- 自定义结果映射 -->
+    <resultMap id="RM_item" type="_Item">
+        <!-- property设置的id对应类属性id，名字应相同
+             column设置的oid对应上文中select字段别名oid -->
+        <id property="id" column="iid"/>
+        <result property="itemName" column="iname"/>
+        <association property="order" javaType="_Order">
+            <id property="id" column="oid"/>
+            <result property="orderNo" column="ono"/>
+            <association property="user" javaType="_User">
+                <id property="id" column="uid"/>
+                <result property="name" column="uname"/>
+                <result property="age" column="uage"/>
+            </association>
+        </association>
+    </resultMap>
+
+</mapper>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="users">
+    <insert id="insert">
+        insert into users(name, age)
+        values (#{name}, #{age})
+    </insert>
+    <update id="update">
+        update users
+        set name = #{name},
+            age  = #{age}
+        where id = #{id}
+    </update>
+
+    <!-- 按id查询一个, 需要指定类型 -->
+    <select id="selectOne" parameterType="int" resultMap="RM_user">
+        select u.id      uid,
+               u.name    uname,
+               u.age     uage,
+               o.id      oid,
+               o.orderno oorderno
+        from users u
+                 left outer join orders o
+                                 on u.id = o.uid
+        where u.id = #{id}
+    </select>
+    <!-- 按id查询一个 -->
+    <!-- select返回的字段名称和类的属性名一样，故而sql会话返回的类型可以包装为指定的resultType,如果不一样则需指定resultMap
+     详细见orderMapper-->
+    <select id="selectAll" resultType="_User">
+        select *
+        from users
+    </select>
+
+    <delete id="delete" parameterType="int">
+        delete
+        from users
+        where id = #{id}
+    </delete>
+    <resultMap id="RM_user" type="_User">
+        <id property="id" column="uid"/>
+        <result property="name" column="uname"/>
+        <result property="age" column="uage"/>
+        <!-- 映射一对多关联关系 -->
+        <collection property="orders" ofType="_Order">
+            <id property="id" column="oid"/>
+            <result property="orderNo" column="oorderno"/>
+        </collection>
+    </resultMap>
+</mapper>

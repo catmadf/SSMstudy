@@ -1,0 +1,316 @@
+1.  pom.xml 中引入 spring-webmvc 依赖
+
+    web 项目还需要将 maven 的类库添加到 [web/WEB-INF/lib] 中。
+    配置 Project Structure -> Project Setting -> Artifacts -> Available Elements -> 右键web模块，选中类库，点击 put into .../lib 。
+    未配置上述lib就会出现如下报错
+    javax.servlet.ServletException: Error instantiating servlet class org.springframework.web.servlet.DispatcherServlet
+    	org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:506)
+    	org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:103)
+    	org.apache.catalina.valves.AccessLogValve.invoke(AccessLogValve.java:962)
+    	org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:445)
+    	org.apache.coyote.http11.AbstractHttp11Processor.process(AbstractHttp11Processor.java:1115)
+    	org.apache.coyote.AbstractProtocol$AbstractConnectionHandler.process(AbstractProtocol.java:637)
+    	org.apache.tomcat.util.net.JIoEndpoint$SocketProcessor.run(JIoEndpoint.java:318)
+    	java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+    	java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+    	org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+    	java.lang.Thread.run(Thread.java:748)
+
+2.  [web/WEB-INF/web.xml] 配置 DispatcherServlet
+    <servlet>
+        <servlet-name>dispatcher</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>dispatcher</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+3.  spring 的配置文件中配置 HandlerMapping、Controller 和 ViewResolver，其默认名字[web/WEB-INF/dispatcher-servlet.xml](分发器名称+'-servlet.xml')
+    1)  在springmvc依赖包下找mvc的schema location : http\://www.springframework.org/schema/mvc=org.springframework.web.servlet.config.MvcNamespaceHandler
+        dispatcher-servlet.xml 中配置命名空间：
+        xmlns:mvc="http://www.springframework.org/schema/mvc"
+        ...
+        http://www.springframework.org/schema/mvc
+        http\://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd" />
+    2)  配置注解驱动
+        <mvc:annotation-driven />
+
+4.  所有的 controller (控制器)都应放在 controller 包下，控制器需加 @Controller 注解
+    [cn/madf/springMVC/web/controller/HomeController.java]
+    @Controller
+    public class HomeController {
+        /**
+             * 打开主页
+             */
+            @RequestMapping(value={"/"})
+            public String goHome(){
+                return null;
+            }
+    }
+    此时该 controller 类不在 spring 容器中。
+
+5.  配置 dispatcher-servlet.xml 文件，增加context配置、扫描包配置
+    [SSMStudy/SpringMVC/web/WEB-INF/dispatcher-servlet.xml]
+    xmlns:context="http://www.springframework.org/schema/context"
+    ...
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+    ...
+    <context:component-scan base-package="cn.madf.springMVC.web.controller" />
+    ...
+
+6.  在测试的 HomeController 类中的添加请求映射函数
+    @RequestMapping(value={"/home"})
+    public String goHome(){
+        System.out.println("hello world");
+        return null;
+    }
+
+    启动 tomcat 后，进入 http://localhost:8080/SpringMVC_war_exploded/home IEDA控制台会有 "hello world" 输出，说明controller相关spring配置成功。
+
+    控制器函数返回值应该是 ModelAndView 的逻辑名。
+
+7.  配置资源视图解析器
+    <!-- 配置资源视图解析器 -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/" />
+        <property name="suffix" value=".jsp" />
+    </bean>
+    [web]文件夹是web目录的根，页面就是前缀("/")+逻辑名+后缀(".jsp")
+
+8.  模拟注册
+    1)  写一个注册界面reg.jsp
+        <body>
+        <form>
+            UserName : <label><input type="text" name="username"></label><br>
+            Password : <label><input type="password" name="password"></label><br>
+            <input type="submit"/>
+        </form>
+        </body>
+    2)  编写注册控制器及响应函数
+        @RequestMapping(value={"/toReg"})
+        public String toRegView() {
+            return "reg";
+        }
+    3)  修改表单标签参数
+        <form action="${pageContext.request.contextPath}/doReg" method="post">
+            UserName : <label><input type="text" name="username"></label><br>
+            Password : <label><input type="password" name="password"></label><br>
+            <input type="submit"/>
+        </form>
+    4)  编写表单参数接收并响应的相关函数
+        @RequestMapping(value={"/doReg"})
+        public String doRegister(HttpServletRequest httpServletRequest) {
+            System.out.println("插入数据");
+            String username = httpServletRequest.getParameter("username");
+            String password = httpServletRequest.getParameter("password");
+            System.out.println(username+"  "+password);
+            return "index";
+        }
+
+        还可以通过注解的方式获取request参数
+        @RequestMapping(value={"/doReg"})
+        public String doReg(@RequestParam("username") String username, @RequestParam("password") String password){
+            System.out.println("插入数据");
+            System.out.println(username + "," + password);
+            return "index" ;
+        }
+9.  引入jstl标签库，jee标准库
+    1)  添加 maven 依赖
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>jstl</artifactId>
+            <version>1.2</version>
+        </dependency>
+    2)  修改 jsp 页面，声明标签库并使用
+        <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+        <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+        <html>
+        <head>
+            <title>reg.jsp</title>
+        </head>
+        <body>
+        <form action='<c:url value="/reg.jsp" />' method="post">
+            UserName : <input type="text" name="username"><br>
+            Password : <input type="password" name="password"><br>
+            <input type="submit"/>
+        </form>
+        </body>
+        </html>
+
+10. 模拟查询(User对象)
+    1)  在 controller 中添加一个请求方法：
+        @RequestMapping(value = {"/selectAll"})
+        public String selectAll(Model model) {    // 传入模型model，用以和页面交互，传数据，model 保存在内存中
+            List<User> userList = new ArrayList<User>();
+            for (int i = 1; i <= 10; i++) {
+                User user = new User(i, "tom" + i, (10 + i) * i * i % 20);
+                userList.add(user);
+            }
+            model.addAttribute("userList",userList);  // 别名，并将 userList 添加进 model 传给界面
+            return "users";
+        }
+
+    2)  写一个 users.jsp ：
+        <body>
+            <table border="1px">
+                <tr>
+                    <td>ID</td>
+                    <td>name</td>
+                    <td>age</td>
+                </tr>
+                <%-- 循环生成表格，items 参数指定被迭代循环对象，items="userList" 中 userList 即 1) 中 model 添加进去的元素别名
+                 var 参数指定被迭代变量名--%>
+                <c:forEach items="userList" var="user">
+                    <td><c:out value="${user.id}"/></td>
+                    <td><c:out value="${user.name}"/></td>
+                    <td><c:out value="${user.age}"/></td>
+                </c:forEach>
+            </table>
+        </body>
+
+    报错：org.apache.jasper.JasperException: The absolute uri: http://java.sun.com/jsp/jstl/core cannot be resolved in either web.xml or the jar files deployed with this application
+                org.apache.jasper.compiler.DefaultErrorHandler.jspError(DefaultErrorHandler.java:56)
+                org.apache.jasper.compiler.ErrorDispatcher.dispatch(ErrorDispatcher.java:445)
+                org.apache.jasper.compiler.ErrorDispatcher.jspError(ErrorDispatcher.java:117)
+                org.apache.jasper.compiler.TagLibraryInfoImpl.generateTLDLocation(TagLibraryInfoImpl.java:325)
+                org.apache.jasper.compiler.TagLibraryInfoImpl.<init>(TagLibraryInfoImpl.java:154)
+                org.apache.jasper.compiler.Parser.parseTaglibDirective(Parser.java:419)
+                org.apache.jasper.compiler.Parser.parseDirective(Parser.java:484)
+                org.apache.jasper.compiler.Parser.parseElements(Parser.java:1421)
+                org.apache.jasper.compiler.Parser.parse(Parser.java:138)
+                org.apache.jasper.compiler.ParserController.doParse(ParserController.java:242)
+                org.apache.jasper.compiler.ParserController.parse(ParserController.java:102)
+                org.apache.jasper.compiler.Compiler.generateJava(Compiler.java:199)
+                org.apache.jasper.compiler.Compiler.compile(Compiler.java:374)
+                org.apache.jasper.compiler.Compiler.compile(Compiler.java:354)
+                org.apache.jasper.compiler.Compiler.compile(Compiler.java:341)
+                org.apache.jasper.JspCompilationContext.compile(JspCompilationContext.java:660)
+                org.apache.jasper.servlet.JspServletWrapper.service(JspServletWrapper.java:364)
+                org.apache.jasper.servlet.JspServlet.serviceJspFile(JspServlet.java:395)
+                org.apache.jasper.servlet.JspServlet.service(JspServlet.java:339)
+                javax.servlet.http.HttpServlet.service(HttpServlet.java:731)
+                org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52)
+                org.springframework.web.servlet.view.InternalResourceView.renderMergedOutputModel(InternalResourceView.java:168)
+                org.springframework.web.servlet.view.AbstractView.render(AbstractView.java:303)
+                org.springframework.web.servlet.DispatcherServlet.render(DispatcherServlet.java:1257)
+                org.springframework.web.servlet.DispatcherServlet.processDispatchResult(DispatcherServlet.java:1037)
+                org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:980)
+                org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:897)
+                org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:970)
+                org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:861)
+                javax.servlet.http.HttpServlet.service(HttpServlet.java:624)
+                org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:846)
+                javax.servlet.http.HttpServlet.service(HttpServlet.java:731)
+                org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52)
+    解决：jstl包没有导入web lib下
+
+    报错：
+        org.apache.jasper.JasperException: An exception occurred processing JSP page /users.jsp at line 24
+
+        22:             <c:forEach items="users" var="user">
+        23:                 <tr>
+        24:                     <td><c:out value="${user.id}"/></td>
+        25:                     <td><c:out value="${user.name}"/></td>
+        26:                     <td><c:out value="${user.age}"/></td>
+        27:                 </tr>
+    解决：
+        jsp 语法错误，传数据必须 " ${***} " 格式
+        更改：
+            <c:forEach items="${userList}" var="user">
+                <tr>
+                    <td><c:out value="${user.id}"/></td>
+                    <td><c:out value="${user.name}"/></td>
+                    <td><c:out value="${user.age}"/></td>
+                </tr>
+            </c:forEach>
+
+
+11. 完成CRUD模拟
+    *   delete(删除):
+        1)  编写请求函数 deleteOne(int id);
+            public String deleteOne(@RequestParam(name = "uid") int uid) {
+                System.out.println("删除成功：" + uid);
+                return "users";
+            }
+        2)  jsp中对表格增加列 '删除';
+            ...
+                <td>age</td>
+                <td>delete</td>
+            </tr>
+            <c:forEach items="${userList}" var="user">
+                <tr>
+                    <td><c:out value="${user.id}"/></td>
+                    <td><c:out value="${user.name}"/></td>
+                    <td><c:out value="${user.age}"/></td>
+                    <td><a href="<c:url value='/deleteOne?uid=${user.id}'/>">删除</a></td>
+            ...
+
+        报错： HTTP Status 400 - Required int parameter 'uid' is not present
+        解决： deleteOne 请求需要传入函数，直接访问 "http://localhost:8080/SpringMVC_war_exploded/deleteOne" 会导致无参传入而报错。
+               按照正常逻辑，应先请求 selectAll 点击 "删除" 请求转发(服务器内部完成)跳转 deleteOne
+
+        3)  重新编辑 deleteOne 函数, 实现跳转到展示剩余用户界面
+            @RequestMapping(value = {"/deleteOne"})
+            public String deleteOne(Model model, @RequestParam("uid") int uid) {
+                System.out.println("删除成功：" + uid);
+                // 请求转发
+                return "forward:/selectAll";
+            }
+        4)  用 java 集合模拟内存数据库，代替真实数据库操作，看看实际跳转情况
+            public class DB {
+                private static HashMap<Integer, User> tables = new HashMap<Integer, User>();
+
+                static {
+                    for (int i = 1; i <= 100; i++) {
+                        User user = new User();
+                        user.setId(i);
+                        user.setName("tom" + i);
+                        user.setAge(10 + (35 + i) * i * i % 20);
+                        tables.put(i, user);
+                    }
+                }
+
+                public static List<User> findAll() {
+                    return new ArrayList<User>(tables.values());
+                }
+
+                public static void deleteOne(int uid) {
+                    tables.remove(uid);
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

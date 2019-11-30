@@ -1,0 +1,29 @@
+spring-config配置
+事务配置
+    配置事务特征，tx:advice依赖于txManager
+    配置事务切面，引用自txAdvice,
+        事务切入点 pointcut = "execution(* *..*Service.*(..))" 中第一个 * 表示任意返回值，第二个*表示任意包或子包，第二个. 表示类和包分隔符，第三个 * 通配符，第四个 * 表示任意方法，括号中 .. 表示任意参数.
+    配置事务管理器
+
+mybatis-spring 配置
+*
+*
+*
+*
+
+报错：org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'txAdvice': Cannot resolve reference to bean 'txManager' while setting bean property 'transactionManager'; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'txManager' defined in class path resource [beans.xml]: BeanPostProcessor before instantiation of bean failed; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'org.springframework.aop.support.DefaultBeanFactoryPointcutAdvisor#0': Initialization of bean failed; nested exception is java.lang.NoClassDefFoundError: org/aspectj/weaver/reflect/ReflectionWorld$ReflectionWorldException
+解决：缺少aspectjweaver依赖
+
+报错：org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'orderDao' defined in file [G:\马登峰\JavaWorkSpace\SSMStudy\springMybatisDemo\target\classes\cn\madf\springMybatis\dao\OrderDao.class]: Invocation of init method failed; nested exception is java.lang.IllegalArgumentException: Property 'sqlSessionFactory' or 'sqlSessionTemplate' are required
+解决: 原因是mybatis-spring-1.2.0以后中取消了自动注入 SqlSessionFactory 和 SqlSessionTemplate
+      在Dao的实现类中加入如下代码，手动注入SqlSessionFactory：
+      @Resource
+      public void setSqlSessionFactory(SqlSessionFactory sqlSessionFactory) {
+          super.setSqlSessionFactory(sqlSessionFactory);
+      }
+
+报错：Method com/mchange/v2/c3p0/impl/NewProxyResultSet.isClosed()Z is abstract
+解决：c3p0包的问题，更换成
+      <groupId>com.mchange</groupId>
+      <artifactId>c3p0</artifactId>
+      <version>0.9.5.2</version>

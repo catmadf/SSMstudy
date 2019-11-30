@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- mapper里边的namespace命名空间的值=mapper接口地址 -->
+<mapper namespace="cn.madf.mybatisDemo.mapper.DemoMapper">
+
+    <!-- ①mapper.java接口中的方法名=mapper.xml中的id值 ②mapper.java接口中方法的输入参数类型=mapper.xml中的parameterType指定的类型保持一致 ③mapper.java接口中方法的返回值类型=mapper.xml中的resultType指定的类型保持一致 -->
+    <!-- 将word的基本信息读取到数据库中 -->
+
+    <select id="DemoMapper" resultType="Specialreport">
+		SELECT * FROM users
+	</select>
+
+</mapper>
