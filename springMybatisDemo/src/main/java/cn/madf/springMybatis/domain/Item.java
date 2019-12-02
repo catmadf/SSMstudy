@@ -9,7 +9,10 @@ package cn.madf.springMybatis.domain;
 public class Item {
     private Integer id;
     private String itemName;
-    // 订单项和订单关联
+
+    /**
+     * Item 和 User、Order相关联
+     */
     private Order order;
     private User user;
 

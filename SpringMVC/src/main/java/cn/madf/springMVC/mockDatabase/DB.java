@@ -17,7 +17,8 @@ public class DB {
     private static HashMap<Integer, User> tables = new HashMap<Integer, User>();
 
     static {
-        for (int i = 1; i <= 100; i++) {
+        int userNum = 100;
+        for (int i = 1; i <= userNum; i++) {
             User user = new User();
             user.setId(i);
             user.setName("tom" + i);
