@@ -10,6 +10,7 @@
         <module name="SpringDemo" />
         <module name="SpringMVC" />
         <module name="springMybatisDemo" />
+        <module name="ssm" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -17,6 +18,7 @@
       <module name="SpringDemo" target="1.5" />
       <module name="SpringMVC" target="1.5" />
       <module name="springMybatisDemo" target="1.5" />
+      <module name="ssm" target="1.5" />
     </bytecodeTargetLevel>
   </component>
 </project>
