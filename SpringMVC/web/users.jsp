@@ -19,6 +19,7 @@
                 <td>name</td>
                 <td>age</td>
                 <td>delete</td>
+                <td>update</td>
             </tr>
             <c:forEach items="${userList}" var="user">
                 <tr>
@@ -26,6 +27,7 @@
                     <td><c:out value="${user.name}"/></td>
                     <td><c:out value="${user.age}"/></td>
                     <td><a href='<c:url value="/deleteOne?uid=${user.id}"/>'>删除</a></td>
+                    <td><a href='<c:url value="/updateUser?uid=${user.id}"/>'>更新</a></td>
                 </tr>
             </c:forEach>
         </table>

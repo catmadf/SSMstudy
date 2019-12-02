@@ -33,4 +33,12 @@ public class DB {
     public static void deleteOne(int uid) {
         tables.remove(uid);
     }
+
+    public static User select(int uid){
+        return tables.get(uid);
+    }
+
+    public static void updateOne(User user){
+        tables.put(user.getId(), user);
+    }
 }

@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,6 +43,19 @@ public class RegisterController {
     public String deleteOne(Model model, @RequestParam("uid") int uid) {
         DB.deleteOne(uid);
         // 请求转发
-        return "forward:/selectAll";
+        return "redirect:/selectAll";
+    }
+
+    @RequestMapping(value = {"/updateUser"})
+    public String updateUser(Model model, @RequestParam("uid") int uid){
+        User user = DB.select(uid);
+        model.addAttribute("user", user);
+        return "/editUser";
+    }
+
+    @RequestMapping(value = {"/updateOne"})
+    public String updateOne(User user){
+        DB.updateOne(user);
+        return "redirect:/selectAll";
     }
 }
