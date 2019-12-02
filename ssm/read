@@ -1,0 +1,57 @@
+1.  添加依赖
+    a.  数据库连接
+    b.  c3p0数据源
+    c.  单元测试
+    d.  mybatis
+    e.  spring上下文
+    d.  aop和事务
+
+2.  包结构
+             ___________________________ spring ____________________________________
+            |                                                                       |
+    jsp  controller  service         DAO         mybatis             c3p0    mysql/sqlServer
+    表现层 ---> 服务层 ---> 数据访问对象 ---> 数据持久化技术 ---> 数据源 ---> 数据库
+    表现层 即 springMVC 包含 jsp + controller
+
+3.  新建domain: User类、Item类、Order类
+    User  ----  Order  :  1  对  多
+    Order ----  Item   :  1  对  多
+    Item  中有要报错 User 和 Order 的需求
+
+4.  新建 DAO 对象：
+    1)  BaseDao                     SqlSessionDaoSupport
+            |                               |(extends)
+            |(implements)   ------     AbstractDao
+            |                               |(extends)
+            |(implements)   ------ [UserDao, OrderDao, ItemDao]
+    2)  说明：
+        BaseDao : 定义Dao的公共方法：insert, update, delete, selectOne, selectAll
+
+        AbstractDao : 继承自 SqlSessionDaoSupport，这是因为mybatis-spring-1.2.0以后中取消了自动注入 SqlSessionFactory 和 SqlSessionTemplate
+                      在Dao的实现类需要进行手动注入操作，属于公共元素，因此用abstract类来实现，让各Dao继承。
+
+        *Dao : 具体实现数据访问的各方法
+
+5.  新建 service 服务类
+    1)  BaseServiceInterface
+                |(implements)   ---------------   AbstractService
+                |                         (extends)|    |    |
+                |(implements)   ---------   UserService |    |
+                |                              (extends)|    |
+                |(implements)   -------------   OrderService |
+                |                                            |(extends)
+                (implements)    ----------------------   ItemService
+    2)  说明：
+        BaseServiceInterface :  定义service公共方法 : insert, update, delete, selectOne, selectAll
+
+        AbstractService : 利用泛型实现接口方法
+
+        *Service : 实现针对各dao的service，并实现dao注入到service的setDao方法
+
+
+
+
+
+
+
+
