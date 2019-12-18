@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <typeAliases>
+        <typeAlias type="cn.madf.ssm.domain.User" alias="_User" />
+        <typeAlias type="cn.madf.ssm.domain.Order" alias="_Order" />
+        <typeAlias type="cn.madf.ssm.domain.Item" alias="_Item" />
+    </typeAliases>
+
+    <!-- 在beans.xml中的数据源已配置了相关信息，以下可以注释掉 -->
+    <!--<environments default="development">-->
+        <!--<environment id="development">-->
+            <!--<transactionManager type="JDBC"/>-->
+            <!--<dataSource type="POOLED">-->
+                <!--<property name="driver" value="com.mysql.cj.jdbc.Driver"/>-->
+                <!--<property name="url" value="jdbc:mysql://localhost:3306/mybatisDemo?serverTimezone=UTC"/>-->
+                <!--<property name="username" value="root"/>-->
+                <!--<property name="password" value="mdf123456"/>-->
+            <!--</dataSource>-->
+        <!--</environment>-->
+    <!--</environments>-->
+     <!--引入映射文件 -->
+    <mappers>
+        <mapper resource="UserMapper.xml"/>
+        <mapper resource="OrderMapper.xml"/>
+        <mapper resource="ItemMapper.xml"/>
+    </mappers>
+</configuration>

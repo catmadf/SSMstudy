@@ -15,6 +15,7 @@ import javax.annotation.Resource;
 @Service("userService")
 public class UserServiceImpl extends BaseServiceImpl<User> implements UserService {
 
+    @Override
     @Resource(name = "userDao")
     public void setDao(BaseDao<User> dao) {
         /*

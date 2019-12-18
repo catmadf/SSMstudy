@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="orders">
+    <insert id="insert">
+        insert into orders(orderno, uid)
+        values (#{orderNo}, #{user.id})
+    </insert>
+
+    <update id="update" parameterType="int">
+        update orders
+        set orderno = #{orderNo}, uid=#{user.id}
+        where id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="int">
+        delete
+        from orders
+        where id = #{id}
+    </delete>
+
+    <!-- findById -->
+    <!-- select字段别名与类属性名不一致，需指定resultMap -->
+    <select id="selectOne" parameterType="int" resultMap="RM_order">
+        select o.id       oid,
+               o.orderno  orderno,
+               o.uid      uid,
+               u.name     uname,
+               u.age      uage,
+               i.id       iid,
+               i.itemname itemname
+        from orders o
+                 left outer join users u
+                                 on o.uid = u.id
+                 left outer join items i
+                                 on i.oid = o.id
+        where o.id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="RM_order">
+        select o.id      oid,
+               o.orderno orderno,
+               o.uid     uid,
+               u.name    uname,
+               u.age     uage
+        from orders o
+                 left outer join users u
+                                 on o.uid = u.id
+    </select>
+
+    <!-- 自定义结果映射 -->
+    <resultMap id="RM_order" type="_Order">
+        <!-- property设置的id对应类属性id，名字应相同
+             column设置的oid对应上文中select字段别名oid，可理解为select返回的是一个新表 -->
+        <id property="id" column="oid"/>
+        <result property="orderNo" column="orderno"/>
+        <!-- 关联对象 -->
+        <association property="user" javaType="_User">
+            <id property="id" column="uid"/>
+            <result property="name" column="uname"/>
+            <result property="age" column="uage"/>
+        </association>
+        <collection property="items" ofType="_Item">
+            <id property="id" column="iid"/>
+            <result property="itemName" column="itemname"/>
+        </collection>
+    </resultMap>
+</mapper>

@@ -4,12 +4,14 @@
     c.  单元测试
     d.  mybatis
     e.  spring上下文
-    d.  aop和事务
+    f.  aop和事务
+    g.  servlet-api
+    h.  jstl
 
 2.  包结构
              ___________________________ spring ____________________________________
             |                                                                       |
-    jsp  controller  service         DAO         mybatis             c3p0    mysql/sqlServer
+    jsp  controller  service        DAO         mybatis            c3p0    mysql/sqlServer/...
     表现层 ---> 服务层 ---> 数据访问对象 ---> 数据持久化技术 ---> 数据源 ---> 数据库
     表现层 即 springMVC 包含 jsp + controller
 
@@ -31,6 +33,7 @@
                       在Dao的实现类需要进行手动注入操作，属于公共元素，因此用abstract类来实现，让各Dao继承。
 
         *Dao : 具体实现数据访问的各方法
+    3)  dao 添加 @Repository(...) 注解
 
 5.  新建 service 服务类
     1)  BaseServiceInterface
@@ -40,18 +43,105 @@
                 |                              (extends)|    |
                 |(implements)   -------------   OrderService |
                 |                                            |(extends)
-                (implements)    ----------------------   ItemService
+                |(implements)   ----------------------   ItemService
     2)  说明：
         BaseServiceInterface :  定义service公共方法 : insert, update, delete, selectOne, selectAll
 
         AbstractService : 利用泛型实现接口方法
 
         *Service : 实现针对各dao的service，并实现dao注入到service的setDao方法
+    3)  service 添加 @Service(...) 注解
+        注入的 dao 添加 @Resource(...) 注解
+
+6.  新建配置文件
+    [resources / beans.xml]
+       1)    配置事务特征和事务切面
+       2）   配置组件扫描
+       3）   配置数据源
+       4）   数据源事务管理器
+       5）   配置SqlSessionFactoryBean（mybatis整合spring的核心类）
+
+    [resources / *Mapper.xml]
+
+    [resources / mybatis-config.xml]
+
+7.  Controller
+    ( controller 调用 service ，service 操作 dao )
+
+    例如：
+        1.  添加 @Controller 注解                   @Controller
+                                                    public class UserController {
+
+        2.  Service 注入，添加@Resource(...)注解        @Resource(name = "userService")
+                                                        private UserService us;
+
+                                                        /**
+                                                         * 查看全部user
+                                                         */
+        3.  前端通过 "/user/findAll" 调用该             @RequestMapping("/user/findAll")
+            功能函数                                    public String findAll(Model model){
+                                                            List<User> userList = us.selectAll();
+                                                            /* 往模型中添加结果，"users" 即为查询结果的逻辑名，前端通过改名字获取查询结果 */
+                                                            model.addAttribute("users", userList);
+                                                            return "user/userList";
+                                                        }
+                                                    }
+
+8.  配置分发器 dispatcher
+    [WEB-INF / dispatcher-servlet.xml]
+        1）   配置扫描路径
+        2）   配置注解驱动
+        3）   配置资源视图解析器
+    [WEB-INF / web.xml]
+        1）   配置分发器 dispatcher
+        2）   配置监听器, 以确保加载 beans.xml 和 dispatcher-servlet.xml 配置文件，完成spring容器初始化
+        3）   指定加载文件的位置
+
+9.  配置 ProjectStructure
+    Artifacts   将右侧 ssm 中的 jar 包右键添加到左边 WEB-INF 中，并在 WEB-INF 中添加 dispatcher-servlet.xml文件
 
 
+报错：  HTTP Status 500 - Servlet.init() for servlet dispatcher threw exception
+        ...
+        root cause
 
+        org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'userController': Injection of resource dependencies failed; nested exception is org.springframework.beans.factory.BeanNotOfRequiredTypeException: Bean named 'userService' is expected to be of type [cn.madf.ssm.service.implement.UserService] but was actually of type [com.sun.proxy.$Proxy16]
+            org.springframework.context.annotation.CommonAnnotationBeanPostProcessor.postProcessPropertyValues(CommonAnnotationBeanPostProcessor.java:321)
+            org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1214)
+            org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:543)
+            org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:482)
+            org.springframework.beans.factory.support.AbstractBeanFactory$1.getObject(AbstractBeanFactory.java:306)
+            org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:230)
+            org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:302)
+            org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:197)
+            org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:776)
+            org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:861)
+            org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:541)
+            org.springframework.web.servlet.FrameworkServlet.configureAndRefreshWebApplicationContext(FrameworkServlet.java:668)
+            org.springframework.web.servlet.FrameworkServlet.createWebApplicationContext(FrameworkServlet.java:634)
+            org.springframework.web.servlet.FrameworkServlet.createWebApplicationContext(FrameworkServlet.java:682)
+            org.springframework.web.servlet.FrameworkServlet.initWebApplicationContext(FrameworkServlet.java:553)
+            org.springframework.web.servlet.FrameworkServlet.initServletBean(FrameworkServlet.java:494)
+            org.springframework.web.servlet.HttpServletBean.init(HttpServletBean.java:136)
+            javax.servlet.GenericServlet.init(GenericServlet.java:158)
+            org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:506)
+            org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:103)
+            org.apache.catalina.valves.AccessLogValve.invoke(AccessLogValve.java:962)
+            org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:445)
+            org.apache.coyote.http11.AbstractHttp11Processor.process(AbstractHttp11Processor.java:1115)
+            org.apache.coyote.AbstractProtocol$AbstractConnectionHandler.process(AbstractProtocol.java:637)
+            org.apache.tomcat.util.net.JIoEndpoint$SocketProcessor.run(JIoEndpoint.java:316)
+            java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+            java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+            org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+            java.lang.Thread.run(Thread.java:748)
 
+解决：  这个错误的原因是spring aop代理混用(参考自https://blog.csdn.net/xw12138/article/details/79802191)
+        <aop:config>...</aop:config>后添加如下语句
+        <aop:aspectj-autoproxy  proxy-target-class="true"/>
 
+10. spring mvc 静态资源路径配置
+    [dispatcher-servlet.xml]
 
-
+    <mvc:resources mapping="/js/**" location="/js/">等
 
